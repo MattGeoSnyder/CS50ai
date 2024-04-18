@@ -24,7 +24,7 @@ def load_data(directory):
             people[row["id"]] = {
                 "name": row["name"],
                 "birth": row["birth"],
-                "movies": set()
+                "movies": set(),
             }
             if row["name"].lower() not in names:
                 names[row["name"].lower()] = {row["id"]}
@@ -38,7 +38,7 @@ def load_data(directory):
             movies[row["id"]] = {
                 "title": row["title"],
                 "year": row["year"],
-                "stars": set()
+                "stars": set(),
             }
 
     # Load stars
@@ -93,28 +93,29 @@ def shortest_path(source, target):
     """
 
     # TODO
-    source_id = person_id_for_name(source)
-    target_id = person_id_for_name(target)
 
-    source_movies = people[source_id]["movies"]
+    source_movie_ids = people.get(source, {}).get("movies", [])
+    source_movies = [(id, movies[id]) for id in source_movie_ids]
     frontier = QueueFrontier()
-    for movie in source_movies:
-        for star in list(movie['stars']):
-            frontier.add((source_id, star['id']))
-            if star['id'] == target_id:
-                return frontier.frontier
+    for movie_id, movie in source_movies:
+        for star in list(movie["stars"]):
+            node = Node([(movie_id, star)], None, None)
+            frontier.add(node)
+            if star == target:
+                return node.state
 
     while not frontier.empty():
         current = frontier.remove()
-        current_id = current[1]
-        current_movies = people[current_id]["movies"]
-        for movie in current_movies:
-            for star in list(movie['stars']):
-                if star['id'] == target_id:
-                    return frontier.frontier
-                frontier.add((current_id, star['id']))
+        current_id = current.state[-1][1]
+        current_movie_ids = people[current_id]["movies"]
+        for movie_id in current_movie_ids:
+            for star in list(movies[movie_id]["stars"]):
+                if star == target:
+                    return current.state + [(movie_id, star)]
+                node = Node(current.state + [(movie_id, star)], None, None)
+                frontier.add(node)
 
-    return None 
+    return None
 
     raise NotImplementedError
 
